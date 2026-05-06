@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Camera</title>
+<style>
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: black;
+    color: white;
+    text-align: center;
+  }
+
+  video {
+    width: 100%;
+    height: 100vh;
+    object-fit: cover;
+  }
+
+  .controls {
+    position: fixed;
+    bottom: 30px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  button {
+    border: none;
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .capture {
+    background: white;
+  }
+
+  .switch {
+    background: gray;
+    color: white;
+  }
+</style>
+</head>
+<body>
+
+<video id="video" autoplay playsinline></video>
+
+<div class="controls">
+  <button class="switch" onclick="switchCamera()">🔄</button>
+  <button class="capture" onclick="takePhoto()">📸</button>
+</div>
+
+<canvas id="canvas" style="display:none;"></canvas>
+
+<script>
+let video = document.getElementById('video');
+let currentStream;
+let useFront = true;
+
+async function startCamera() {
+  if (currentStream) {
+    currentStream.getTracks().forEach(track => track.stop());
+  }
+
+  try {
+    currentStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: useFront ? "user" : "environment" }
+    });
+    video.srcObject = currentStream;
+  } catch (e) {
+    alert("Нет доступа к камере");
+  }
+}
+
+function switchCamera() {
+  useFront = !useFront;
+  startCamera();
+}
+
+function takePhoto() {
+  let canvas = document.getElementById('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  let ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+
+  let link = document.createElement('a');
+  link.download = 'photo.png';
+  link.href = canvas.toDataURL();
+  link.click();
+}
+
+startCamera();
+</script>
+
+</body>
+</html>
